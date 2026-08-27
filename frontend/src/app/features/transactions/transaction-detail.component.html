@@ -1,0 +1,62 @@
+<div class="page">
+  <p class="breadcrumb"><a routerLink="/transactions">&larr; Transactions</a></p>
+
+  @if (loading()) {
+    <p>Loading...</p>
+  } @else if (error()) {
+    <p class="error">{{ error() }}</p>
+  } @else if (transaction(); as t) {
+    <div class="page-header">
+      <h1>{{ t.merchantName }}</h1>
+      <app-status-badge [value]="t.status" />
+    </div>
+
+    <div class="panel">
+      <h2>Transaction</h2>
+      <div class="detail-grid">
+        <div class="detail-field"><div class="label">Amount</div><div class="value">{{ t.amount | currency:t.currency }}</div></div>
+        <div class="detail-field"><div class="label">Merchant Category</div><div class="value">{{ t.merchantCategory }}</div></div>
+        <div class="detail-field"><div class="label">Country</div><div class="value">{{ t.countryCode }}</div></div>
+        <div class="detail-field"><div class="label">Account ID</div><div class="value">{{ t.accountId }}</div></div>
+        <div class="detail-field"><div class="label">Occurred At</div><div class="value">{{ t.occurredAtUtc | date: 'medium' }}</div></div>
+        <div class="detail-field"><div class="label">Risk Score</div><div class="value">{{ t.riskScore ?? '—' }}</div></div>
+        <div class="detail-field"><div class="label">Scored By</div><div class="value">{{ t.processingSource ?? '—' }}</div></div>
+        <div class="detail-field"><div class="label">Processing Latency</div><div class="value">{{ processingLatencyMs() !== null ? processingLatencyMs() + ' ms' : '—' }}</div></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Pipeline Trace</h2>
+      <div class="detail-grid">
+        <div class="detail-field"><div class="label">Published to Kafka</div><div class="value">{{ t.publishedToKafkaUtc ? (t.publishedToKafkaUtc | date: 'medium') : 'Not yet published' }}</div></div>
+        <div class="detail-field"><div class="label">Processed At</div><div class="value">{{ t.processedAtUtc ? (t.processedAtUtc | date: 'medium') : 'Not yet processed' }}</div></div>
+        @if (t.processingError) {
+          <div class="detail-field"><div class="label">Processing Error</div><div class="value" style="color:#b91c1c;">{{ t.processingError }}</div></div>
+        }
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Fraud Alerts ({{ alerts().length }})</h2>
+      @if (alerts().length === 0) {
+        <p>No alerts raised for this transaction.</p>
+      } @else {
+        <table>
+          <thead>
+            <tr><th>Risk Score</th><th>Severity</th><th>Source</th><th>Reason</th></tr>
+          </thead>
+          <tbody>
+            @for (a of alerts(); track a.id) {
+              <tr>
+                <td>{{ a.riskScore }}</td>
+                <td><app-status-badge [value]="a.severity" /></td>
+                <td class="source">{{ a.source === 'PySparkAnomalyDetection' ? 'PySpark' : 'Scala' }}</td>
+                <td class="reason">{{ a.reason }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      }
+    </div>
+  }
+</div>

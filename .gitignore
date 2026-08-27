@@ -1,0 +1,35 @@
+# .NET
+backend/**/bin/
+backend/**/obj/
+backend/**/TestResults/
+
+# Angular / Node
+frontend/node_modules/
+frontend/dist/
+frontend/.angular/
+frontend/coverage/
+
+# Scala / sbt
+spark-jobs/scala-risk-engine/target/
+spark-jobs/scala-risk-engine/project/target/
+spark-jobs/scala-risk-engine/project/project/
+*.class
+
+# Python / PySpark
+spark-jobs/pyspark-analytics/__pycache__/
+spark-jobs/pyspark-analytics/**/__pycache__/
+spark-jobs/pyspark-analytics/.pytest_cache/
+*.pyc
+
+# Editors / OS
+.vs/
+.vscode/
+*.user
+.DS_Store
+*.log
+
+# Secrets -- see .env.example for the template
+.env
+
+# Local tooling artifacts
+.claude/

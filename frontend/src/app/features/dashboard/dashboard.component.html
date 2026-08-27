@@ -1,0 +1,160 @@
+<div class="page">
+  <div class="page-header">
+    <h1>Fraud Detection &amp; Risk Analytics</h1>
+    <button class="btn" (click)="simulateTransaction()" [disabled]="simulating()">
+      {{ simulating() ? 'Sending…' : (auth.isAuthenticated() ? 'Simulate Transaction' : 'Login to Simulate') }}
+    </button>
+  </div>
+
+  @if (error()) {
+    <p class="error">{{ error() }}</p>
+  }
+
+  @if (pipeline(); as p) {
+    <section class="pipeline">
+      <span class="dot" [class.dot-up]="p.kafkaConnected" [class.dot-down]="!p.kafkaConnected"></span>
+      <span>Kafka {{ p.kafkaConnected ? 'connected' : 'unreachable' }}</span>
+      <span class="sep">·</span>
+      <span>Produced {{ p.messagesProduced }}</span>
+      <span class="sep">·</span>
+      <span>Consumed {{ p.messagesConsumed }}</span>
+      <span class="sep">·</span>
+      <span>Pending {{ p.pendingCount }}</span>
+      @if (p.stuckCount > 0) {
+        <span class="sep">·</span>
+        <span class="warn">{{ p.stuckCount }} stuck</span>
+      }
+    </section>
+  }
+
+  @if (stats(); as s) {
+    <section class="cards">
+      <app-stat-card label="Total Transactions" [value]="s.totalTransactions | number" />
+      <app-stat-card label="Fraud Alerts" [value]="s.totalAlerts | number" />
+      <app-stat-card label="Fraud Rate" [value]="(s.fraudRate | number: '1.2-2') + '%'" />
+      <app-stat-card label="Open Alerts" [value]="s.openAlerts | number" />
+      <app-stat-card label="Total Volume" [value]="s.totalAmount | currency" />
+      <app-stat-card label="Flagged Volume" [value]="s.flaggedAmount | currency" />
+      @if (pipeline(); as p) {
+        <app-stat-card
+          label="Avg Processing Latency"
+          [value]="p.avgProcessingLatencyMs !== null ? (p.avgProcessingLatencyMs | number: '1.0-0') + ' ms' : '—'"
+        />
+      }
+    </section>
+
+    <div class="grid-2">
+      <section class="chart">
+        <h2>Alerts by Severity</h2>
+        <div class="bars">
+          @for (bar of severityBars(); track bar.severity) {
+            <div class="bar-row">
+              <span class="bar-label">{{ bar.severity }}</span>
+              <div class="bar-track">
+                <div class="bar-fill" [class]="'sev-' + bar.severity.toLowerCase()" [style.width.%]="bar.pct"></div>
+              </div>
+              <span class="bar-count">{{ bar.count }}</span>
+            </div>
+          }
+        </div>
+      </section>
+
+      <section class="chart">
+        <h2>Top Fraud Triggers</h2>
+        @if (topTriggerBars().length === 0) {
+          <p>No triggered rules yet.</p>
+        } @else {
+          <div class="bars">
+            @for (t of topTriggerBars(); track t.ruleName) {
+              <div class="bar-row">
+                <span class="bar-label">{{ t.ruleName }}</span>
+                <div class="bar-track">
+                  <div class="bar-fill sev-high" [style.width.%]="t.pct"></div>
+                </div>
+                <span class="bar-count">{{ t.count }}</span>
+              </div>
+            }
+          </div>
+        }
+      </section>
+    </div>
+
+    <section class="chart">
+      <h2>Transaction Volume &amp; Fraud, Last 14 Days</h2>
+      <div class="trend-bars">
+        @for (day of trendBars(); track day.date) {
+          <div class="trend-col" [title]="day.date + ': ' + day.transactionCount + ' txns, ' + day.flaggedCount + ' flagged'">
+            <div class="trend-track">
+              <div class="trend-fill" [style.height.%]="day.pct">
+                @if (day.flaggedCount > 0) {
+                  <div class="trend-flagged" [style.height.%]="day.flaggedPct"></div>
+                }
+              </div>
+            </div>
+            <span class="trend-label">{{ day.date | date: 'M/d' }}</span>
+          </div>
+        }
+      </div>
+    </section>
+  }
+
+  <section class="grid-2">
+    <div class="panel">
+      <h2>Recent Transactions</h2>
+      @if (loading()) {
+        <p>Loading...</p>
+      } @else {
+        <table>
+          <thead>
+            <tr>
+              <th>Merchant</th>
+              <th>Amount</th>
+              <th>Status</th>
+              <th>Risk</th>
+              <th>When</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (t of transactions(); track t.id) {
+              <tr class="clickable" [routerLink]="['/transactions', t.id]">
+                <td>{{ t.merchantName }}</td>
+                <td>{{ t.amount | currency }}</td>
+                <td><app-status-badge [value]="t.status" /></td>
+                <td>{{ t.riskScore ?? '—' }}</td>
+                <td>{{ t.occurredAtUtc | date: 'short' }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+        <p><a routerLink="/transactions">View all transactions &rarr;</a></p>
+      }
+    </div>
+
+    <div class="panel">
+      <h2>Fraud Alerts</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Merchant</th>
+            <th>Risk</th>
+            <th>Severity</th>
+            <th>Source</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (a of alerts(); track a.id) {
+            <tr class="clickable" [routerLink]="['/alerts', a.id]">
+              <td>{{ a.merchantName }}</td>
+              <td>{{ a.riskScore }}</td>
+              <td><app-status-badge [value]="a.severity" /></td>
+              <td class="source">{{ a.source === 'PySparkAnomalyDetection' ? 'PySpark' : 'Scala' }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+      <p><a routerLink="/alerts">View all alerts &rarr;</a></p>
+    </div>
+  </section>
+
+  <p><a routerLink="/customers">View customer risk summary &rarr;</a></p>
+</div>

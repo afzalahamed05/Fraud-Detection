@@ -1,0 +1,20 @@
+<div class="page" style="max-width: 400px;">
+  <div class="page-header"><h1>Login</h1></div>
+  <div class="panel">
+    @if (error()) {
+      <p class="error">{{ error() }}</p>
+    }
+    <form (ngSubmit)="submit()">
+      <div style="margin-bottom: 12px;">
+        <label style="display:block; font-size:0.8rem; margin-bottom:4px;">Username</label>
+        <input name="username" [(ngModel)]="username" style="width:100%; padding:8px; border:1px solid #cbd5e1; border-radius:6px;" />
+      </div>
+      <div style="margin-bottom: 16px;">
+        <label style="display:block; font-size:0.8rem; margin-bottom:4px;">Password</label>
+        <input name="password" type="password" [(ngModel)]="password" style="width:100%; padding:8px; border:1px solid #cbd5e1; border-radius:6px;" />
+      </div>
+      <button type="submit" class="btn" [disabled]="loading()">{{ loading() ? 'Signing in…' : 'Login' }}</button>
+    </form>
+    <p style="font-size: 0.75rem; color:#64748b; margin-top:16px;">Demo credentials: admin / admin123</p>
+  </div>
+</div>

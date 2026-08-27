@@ -1,0 +1,57 @@
+<div class="page">
+  <div class="page-header">
+    <h1>Customer Risk Summary</h1>
+  </div>
+  <p style="color:#64748b; font-size:0.85rem; margin-top:-8px;">
+    Behavioral baselines computed by the PySpark analytics job from transaction history.
+  </p>
+
+  @if (error()) {
+    <p class="error">{{ error() }}</p>
+  }
+
+  <div class="panel">
+    @if (loading()) {
+      <p>Loading...</p>
+    } @else if (profiles().length === 0) {
+      <p>No customer profiles yet.</p>
+    } @else {
+      <table>
+        <thead>
+          <tr>
+            <th>Account</th>
+            <th># Transactions</th>
+            <th>Avg Amount</th>
+            <th>Std Dev</th>
+            <th>Max Amount</th>
+            <th>Categories</th>
+            <th>Countries</th>
+            <th>Txns / Day</th>
+            <th>Updated</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (p of profiles(); track p.accountId) {
+            <tr>
+              <td class="source">{{ p.accountId.slice(0, 8) }}…</td>
+              <td>{{ p.transactionCount }}</td>
+              <td>{{ p.avgAmount | currency }}</td>
+              <td>{{ p.stdDevAmount | currency }}</td>
+              <td>{{ p.maxAmount | currency }}</td>
+              <td>{{ p.distinctMerchantCategories }}</td>
+              <td>{{ p.distinctCountries }}</td>
+              <td>{{ p.avgTransactionsPerDay }}</td>
+              <td>{{ p.updatedAtUtc | date: 'short' }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+
+      <div class="pagination">
+        <button class="btn btn-secondary" [disabled]="page() <= 1" (click)="goToPage(-1)">Previous</button>
+        <span>Page {{ page() }} of {{ totalPages() }} ({{ totalCount() }} total)</span>
+        <button class="btn btn-secondary" [disabled]="page() >= totalPages()" (click)="goToPage(1)">Next</button>
+      </div>
+    }
+  </div>
+</div>

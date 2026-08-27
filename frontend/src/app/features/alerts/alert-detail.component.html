@@ -1,0 +1,50 @@
+<div class="page">
+  <p class="breadcrumb"><a routerLink="/alerts">&larr; Fraud Alerts</a></p>
+
+  @if (loading()) {
+    <p>Loading...</p>
+  } @else if (error()) {
+    <p class="error">{{ error() }}</p>
+  } @else if (alert(); as a) {
+    <div class="page-header">
+      <h1>{{ a.merchantName }} &mdash; {{ a.transactionAmount | currency }}</h1>
+      <app-status-badge [value]="a.severity" />
+    </div>
+
+    <div class="panel">
+      <h2>Alert</h2>
+      <div class="detail-grid">
+        <div class="detail-field"><div class="label">Risk Score</div><div class="value">{{ a.riskScore }}</div></div>
+        <div class="detail-field"><div class="label">Severity</div><div class="value">{{ a.severity }}</div></div>
+        <div class="detail-field"><div class="label">Status</div><div class="value"><app-status-badge [value]="a.status" /></div></div>
+        <div class="detail-field"><div class="label">Source</div><div class="value">{{ a.source === 'PySparkAnomalyDetection' ? 'PySpark Anomaly Detection' : 'Scala Risk Engine' }}</div></div>
+        <div class="detail-field"><div class="label">Raised At</div><div class="value">{{ a.createdAtUtc | date: 'medium' }}</div></div>
+        <div class="detail-field"><div class="label">Transaction</div><div class="value"><a [routerLink]="['/transactions', a.transactionId]">View transaction</a></div></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Reason</h2>
+      <p>{{ a.reason }}</p>
+      @if (triggeredRulesList().length > 0) {
+        <p style="margin-top:12px;">
+          @for (rule of triggeredRulesList(); track rule) {
+            <span class="status status-flagged" style="margin-right:6px;">{{ rule }}</span>
+          }
+        </p>
+      }
+    </div>
+
+    <div class="panel">
+      <h2>Triage</h2>
+      @if (auth.isAuthenticated()) {
+        <div style="display:flex; gap:8px;">
+          <button class="btn" [disabled]="updating() || a.status === 'Reviewed'" (click)="setStatus('Reviewed')">Mark Reviewed</button>
+          <button class="btn btn-secondary" [disabled]="updating() || a.status === 'Dismissed'" (click)="setStatus('Dismissed')">Dismiss</button>
+        </div>
+      } @else {
+        <p>Log in as an admin to triage this alert.</p>
+      }
+    </div>
+  }
+</div>

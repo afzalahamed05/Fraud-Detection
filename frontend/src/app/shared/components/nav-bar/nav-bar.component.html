@@ -1,0 +1,17 @@
+<div class="navbar">
+  <span class="brand">Fraud Detection &amp; Risk Analytics</span>
+  <nav>
+    <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Dashboard</a>
+    <a routerLink="/transactions" routerLinkActive="active">Transactions</a>
+    <a routerLink="/alerts" routerLinkActive="active">Alerts</a>
+    <a routerLink="/customers" routerLinkActive="active">Customers</a>
+  </nav>
+  <div class="auth">
+    @if (auth.isAuthenticated()) {
+      <span>{{ auth.username() }}</span>
+      <a (click)="logout()">Logout</a>
+    } @else {
+      <a routerLink="/login" routerLinkActive="active">Login</a>
+    }
+  </div>
+</div>

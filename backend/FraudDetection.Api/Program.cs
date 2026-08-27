@@ -65,8 +65,8 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 // FraudDetectionService is no longer registered for live scoring as of Phase 3: the Scala
 // Structured Streaming risk engine (spark-jobs/scala-risk-engine) owns real-time scoring,
-// writing results straight to Postgres via JDBC. FraudDetectionService itself stays in use
-// for SeedData's synchronous historical-import path and its own unit tests.
+// writing results straight to Postgres via JDBC. FraudDetectionService itself stays in the
+// repo only for its own unit tests, as a reference for the rules Scala's engine ported.
 builder.Services.Configure<KafkaOptions>(builder.Configuration.GetSection(KafkaOptions.SectionName));
 builder.Services.AddSingleton<KafkaPipelineMetrics>();
 builder.Services.AddSingleton<KafkaProducerService>();
@@ -125,13 +125,13 @@ if (string.IsNullOrWhiteSpace(resolvedAuthOptions.JwtSecret))
 
 // Skipped under the "Testing" environment: WebApplicationFactory-based integration tests
 // swap in the EF InMemory provider, which doesn't support relational migrations, and each
-// test controls its own data instead of relying on the ~500-row synthetic seed.
+// test controls its own data instead. No synthetic data is seeded here -- the database
+// starts empty and only ever holds real transactions submitted through the API.
 if (!app.Environment.IsEnvironment("Testing"))
 {
     using var scope = app.Services.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     db.Database.Migrate();
-    await SeedData.SeedAsync(db);
 }
 
 app.UseExceptionHandler();

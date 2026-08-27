@@ -9,7 +9,8 @@ namespace FraudDetection.Api.Tests.Integration;
 
 /// <summary>
 /// Swaps the real Npgsql AppDbContext for a fresh EF InMemory database per factory instance,
-/// and forces "Testing" environment so Program.cs skips Migrate()/SeedData (see Program.cs).
+/// and forces "Testing" environment so Program.cs skips the relational Migrate() call (see
+/// Program.cs) -- InMemory doesn't support it, and each test seeds its own data anyway.
 /// Kafka publish calls still hit the network (KafkaProducerService isn't mocked out) but
 /// fail fast via the inline retry's own timeout, so tests stay correct without a live broker.
 /// </summary>
